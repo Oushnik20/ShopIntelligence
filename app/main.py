@@ -85,11 +85,19 @@ def funnel(store_id: str):
 
     return result
 
-
 @app.get("/stores/{store_id}/anomalies")
 def anomalies(store_id: str):
 
-    return get_anomalies()
+    db = SessionLocal()
+
+    result = get_anomalies(
+        db,
+        store_id
+    )
+
+    db.close()
+
+    return result
 
 
 @app.get("/health")
