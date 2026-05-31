@@ -1,5 +1,7 @@
 from sqlalchemy.orm import Session
+
 from .models import Event
+from .models import Transaction
 
 
 def get_funnel(
@@ -19,11 +21,11 @@ def get_funnel(
         vid = e.visitor_id
 
         if vid not in sessions:
+
             sessions[vid] = {
                 "entry": False,
                 "zone": False,
-                "billing": False,
-                "purchase": False
+                "billing": False
             }
 
         if e.event_type == "ENTRY":
@@ -37,9 +39,6 @@ def get_funnel(
 
         if e.event_type == "BILLING_QUEUE_JOIN":
             sessions[vid]["billing"] = True
-
-        if e.event_type == "PURCHASE":
-            sessions[vid]["purchase"] = True
 
     entry = sum(
         1 for s in sessions.values()
@@ -56,14 +55,20 @@ def get_funnel(
         if s["billing"]
     )
 
-    purchase = sum(
-        1 for s in sessions.values()
-        if s["purchase"]
+    purchases = len(
+        set(
+            t.visitor_id
+            for t in db.query(Transaction)
+            .filter(
+                Transaction.store_id == store_id
+            )
+            .all()
+        )
     )
 
     return {
         "entry": entry,
         "zone_visit": zone,
         "billing_queue": billing,
-        "purchase": purchase
+        "purchase": purchases
     }
