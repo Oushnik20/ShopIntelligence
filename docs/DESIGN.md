@@ -1,49 +1,173 @@
-# Store Intelligence System Design
+# Design Decisions
 
-## Architecture
+## Problem
 
-The system consists of four major layers:
+Retail stores require visibility into customer behavior, engagement, and conversion.
 
-1. Detection Layer
-2. Event Ingestion Layer
-3. Intelligence API
-4. Dashboard Layer
+Traditional CCTV systems provide video but do not generate actionable insights.
 
-### Detection Layer
+The goal of this platform is to transform video streams into business intelligence.
 
-Raw CCTV footage is processed using a person detection and tracking pipeline.
+---
 
-Planned stack:
-- YOLOv8
-- ByteTrack
-- OpenCV
+# Detection Layer
 
-Output:
-Structured behavioral events.
+## YOLOv8
 
-### Event Layer
+Chosen because:
 
-Events are emitted in JSON format and ingested through the FastAPI endpoint.
+- Fast inference
+- Strong person detection performance
+- Lightweight deployment
+- Easy integration
 
-### Intelligence API
+Model:
 
-The API computes:
+```
 
-- Visitor counts
-- Conversion rates
-- Funnel metrics
-- Zone dwell metrics
-- Operational anomalies
+yolov8n
 
-### Storage
+```
 
-SQLite is currently used for local development.
+Tradeoff:
 
-### AI-Assisted Decisions
+Lower accuracy than larger models but significantly faster.
 
-AI tools were used to:
-- Evaluate detection architectures
-- Design event schema
-- Generate and refine test cases
+---
 
-Suggestions were reviewed manually before implementation.
+# Tracking Layer
+
+## ByteTrack
+
+Chosen because:
+
+- Stable identity assignment
+- Works well in crowded scenes
+- Lightweight implementation
+
+Purpose:
+
+Convert frame-level detections into visitor trajectories.
+
+---
+
+# Event Driven Architecture
+
+Instead of directly computing metrics from video, the system generates events.
+
+Benefits:
+
+- Decoupled architecture
+- Easier testing
+- Reproducibility
+- Future scalability
+
+Examples:
+
+```
+
+ENTRY
+ZONE_DWELL
+BILLING_QUEUE_JOIN
+
+```
+
+---
+
+# Storage Layer
+
+## SQLite
+
+Chosen because:
+
+- Simple setup
+- Zero infrastructure
+- Portable
+- Suitable for assessment scope
+
+Tradeoff:
+
+Not ideal for large-scale production workloads.
+
+---
+
+# Analytics Layer
+
+Metrics are derived from stored events.
+
+Examples:
+
+- Visitor Count
+- Conversion Rate
+- Queue Depth
+- Dwell Time
+
+---
+
+# Funnel Analytics
+
+Customer journey modeled as:
+
+```
+
+ENTRY
+↓
+ZONE_VISIT
+↓
+BILLING_QUEUE
+↓
+PURCHASE
+
+```
+
+This allows identification of conversion drop-offs.
+
+---
+
+# Anomaly Detection
+
+Rule-based detection used for simplicity.
+
+Implemented:
+
+- Queue Spike
+- Conversion Drop
+- Dead Zone
+
+Future:
+
+- ML-based anomaly detection
+- Forecasting models
+
+---
+
+# Scalability Considerations
+
+Future production deployment could replace:
+
+SQLite → PostgreSQL
+
+Local Processing → Kafka + Stream Processing
+
+Batch Analytics → Real-time Analytics
+
+---
+
+# Assumptions
+
+- One tracked ID corresponds to one visitor.
+- Cameras have fixed viewpoints.
+- POS transactions are available.
+- Zone boundaries are predefined.
+
+---
+
+# Future Work
+
+- Real-time RTSP ingestion
+- Heatmaps
+- Path analytics
+- Multi-store deployment
+- Cloud deployment
+- Staff detection
+- Customer segmentation
