@@ -34,3 +34,11 @@ build/
 
 videos/
 *.mp4
+
+venv/
+store.db
+yolov8n.pt
+__pycache__/
+.pytest_cache/
+videos/
+*.mp4
