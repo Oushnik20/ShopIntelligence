@@ -236,8 +236,6 @@ Investigate customer journey
 
 ## Store Layout
 
-## Store Layout
-
 The store layout is modeled as logical business zones.
 
 Examples:

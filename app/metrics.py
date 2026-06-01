@@ -30,7 +30,7 @@ def get_metrics(
     converted_visitors = {
         t.visitor_id
         for t in transactions
-    }
+    } & visitors
 
     conversion_rate = 0
 
@@ -66,29 +66,25 @@ def get_metrics(
             2
         )
 
-    queue_depth = len(
-        [
-            e
-            for e in events
-            if e.event_type ==
-            "BILLING_QUEUE_JOIN"
-        ]
-    )
+    queue_visitors = {
+        e.visitor_id
+        for e in events
+        if e.event_type == "BILLING_QUEUE_JOIN"
+    }
 
-    abandoned = len(
-        [
-            e
-            for e in events
-            if e.event_type ==
-            "BILLING_QUEUE_ABANDON"
-        ]
-    )
+    abandoned_visitors = {
+        e.visitor_id
+        for e in events
+        if e.event_type == "BILLING_QUEUE_ABANDON"
+    }
+
+    queue_depth = len(queue_visitors)
 
     abandonment_rate = 0
 
     if queue_depth:
         abandonment_rate = round(
-            abandoned
+            len(abandoned_visitors & queue_visitors)
             /
             queue_depth
             *

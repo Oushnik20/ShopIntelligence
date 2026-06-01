@@ -14,61 +14,41 @@ def get_funnel(
         Event.is_staff == False
     ).all()
 
-    sessions = {}
+    entry_visitors = set()
+    zone_visitors = set()
+    billing_visitors = set()
 
     for e in events:
 
-        vid = e.visitor_id
-
-        if vid not in sessions:
-
-            sessions[vid] = {
-                "entry": False,
-                "zone": False,
-                "billing": False
-            }
-
         if e.event_type == "ENTRY":
-            sessions[vid]["entry"] = True
+            entry_visitors.add(e.visitor_id)
 
         if e.event_type in [
             "ZONE_ENTER",
             "ZONE_DWELL"
         ]:
-            sessions[vid]["zone"] = True
+            zone_visitors.add(e.visitor_id)
 
         if e.event_type == "BILLING_QUEUE_JOIN":
-            sessions[vid]["billing"] = True
+            billing_visitors.add(e.visitor_id)
 
-    entry = sum(
-        1 for s in sessions.values()
-        if s["entry"]
-    )
-
-    zone = sum(
-        1 for s in sessions.values()
-        if s["zone"]
-    )
-
-    billing = sum(
-        1 for s in sessions.values()
-        if s["billing"]
-    )
+    purchase_visitors = {
+        t.visitor_id
+        for t in db.query(Transaction)
+        .filter(
+            Transaction.store_id == store_id
+        )
+        .all()
+    }
 
     purchases = len(
-        set(
-            t.visitor_id
-            for t in db.query(Transaction)
-            .filter(
-                Transaction.store_id == store_id
-            )
-            .all()
-        )
+        purchase_visitors
+        & entry_visitors
     )
 
     return {
-        "entry": entry,
-        "zone_visit": zone,
-        "billing_queue": billing,
+        "entry": len(entry_visitors),
+        "zone_visit": len(zone_visitors),
+        "billing_queue": len(billing_visitors),
         "purchase": purchases
     }
