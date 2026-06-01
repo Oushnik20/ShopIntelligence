@@ -8,22 +8,38 @@ st.set_page_config(
     layout="wide"
 )
 
+API_URL = "https://shopintelligence.onrender.com"
 STORE_ID = "STORE_BLR_002"
 
-metrics = requests.get(
-    f"http://localhost:8000/stores/{STORE_ID}/metrics"
-).json()
+try:
 
-anomalies = requests.get(
-    f"http://localhost:8000/stores/{STORE_ID}/anomalies"
-).json()
+    metrics = requests.get(
+        f"{API_URL}/stores/{STORE_ID}/metrics",
+        timeout=15
+    ).json()
 
-funnel = requests.get(
-    f"http://localhost:8000/stores/{STORE_ID}/funnel"
-).json()
+    anomalies = requests.get(
+        f"{API_URL}/stores/{STORE_ID}/anomalies",
+        timeout=15
+    ).json()
 
-st.title("Store Intelligence Platform")
-st.caption("Retail Analytics Dashboard")
+    funnel = requests.get(
+        f"{API_URL}/stores/{STORE_ID}/funnel",
+        timeout=15
+    ).json()
+
+except Exception as e:
+
+    st.error(
+        f"Backend connection failed: {e}"
+    )
+
+    st.stop()
+
+st.title("🏪 Store Intelligence Platform")
+st.caption(
+    "AI-Powered Retail Analytics Dashboard"
+)
 
 st.divider()
 
@@ -52,16 +68,18 @@ with col4:
         "⚠️ Abandonment %",
         f"{metrics['abandonment_rate']}%"
     )
+
 st.markdown(
     """
-    Monitor visitor engagement, queue health,
-    conversion performance and store anomalies.
+    Monitor visitor engagement, dwell time,
+    queue performance, conversion funnel,
+    and operational anomalies across the store.
     """
 )
 
 st.divider()
 
-st.subheader("Conversion Funnel")
+st.subheader("📈 Conversion Funnel")
 
 funnel_df = pd.DataFrame(
     {
@@ -113,7 +131,7 @@ else:
 
 st.divider()
 
-st.subheader("Active Anomalies")
+st.subheader("🚨 Active Anomalies")
 
 if anomalies["anomalies"]:
 
@@ -121,11 +139,11 @@ if anomalies["anomalies"]:
 
         st.warning(
             f"""
-{a['type']}
+Type: {a['type']}
 
 Severity: {a['severity']}
 
-Action: {a['suggested_action']}
+Suggested Action: {a['suggested_action']}
 """
         )
 
@@ -141,3 +159,19 @@ with st.expander(
     "🔍 View Raw Metrics"
 ):
     st.json(metrics)
+
+with st.expander(
+    "🔍 View Funnel Data"
+):
+    st.json(funnel)
+
+with st.expander(
+    "🔍 View Anomaly Data"
+):
+    st.json(anomalies)
+
+st.divider()
+
+st.caption(
+    "Store Intelligence Platform"
+)
