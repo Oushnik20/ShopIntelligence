@@ -31,3 +31,6 @@ store.db
 dist/
 build/
 *.egg-info/
+
+videos/
+*.mp4
