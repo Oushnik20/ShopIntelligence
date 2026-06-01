@@ -110,3 +110,10 @@ def health():
     db.close()
 
     return result
+
+@app.get("/")
+def root():
+    return {
+        "service": "Store Intelligence API",
+        "status": "running"
+    }
