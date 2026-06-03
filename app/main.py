@@ -7,6 +7,7 @@ from .database import SessionLocal
 
 from .models import Event
 from .ingestion import EventSchema
+from .ingestion import normalize_event_type
 
 from .metrics import get_metrics
 from .health import get_health
@@ -14,6 +15,7 @@ from .anomalies import get_anomalies
 from .funnel import get_funnel
 from .middleware import LoggingMiddleware
 from .exceptions import generic_exception_handler
+from .revenue import get_revenue_metrics
 
 Base.metadata.create_all(bind=engine)
 
@@ -42,6 +44,11 @@ def ingest(events: list[EventSchema]):
 
         # row = Event(**e.model_dump())
         data = e.model_dump()
+
+        # Normalize incoming event type to internal format
+        data["event_type"] = normalize_event_type(
+            data["event_type"]
+        )
 
         data["event_metadata"] = data.pop("metadata")
 
@@ -117,3 +124,21 @@ def root():
         "service": "Store Intelligence API",
         "status": "running"
     }
+
+@app.get(
+    "/stores/{store_id}/revenue"
+)
+def revenue(
+    store_id: str
+):
+
+    db = SessionLocal()
+
+    result = get_revenue_metrics(
+        db,
+        store_id
+    )
+
+    db.close()
+
+    return result

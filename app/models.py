@@ -23,11 +23,24 @@ class Event(Base):
 
     timestamp = Column(String, index=True)
 
+    # Zone information
     zone_id = Column(String, nullable=True)
+    zone_name = Column(String, nullable=True)
+    zone_type = Column(String, nullable=True)
+    is_revenue_zone = Column(Boolean, nullable=True)
 
+    # Dwell and engagement
     dwell_ms = Column(Integer)
 
+    # Visitor attributes
     is_staff = Column(Boolean)
+    gender = Column(String, nullable=True)
+    age = Column(Integer, nullable=True)
+    age_bucket = Column(String, nullable=True)
+
+    # Group information
+    group_id = Column(String, nullable=True)
+    group_size = Column(Integer, nullable=True)
 
     confidence = Column(Float)
 

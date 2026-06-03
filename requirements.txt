@@ -6,6 +6,7 @@ streamlit
 requests
 pandas
 pytest
+httpx
 opencv-python-headless
 ultralytics
 supervision

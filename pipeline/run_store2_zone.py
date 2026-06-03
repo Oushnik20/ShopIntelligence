@@ -7,8 +7,8 @@ from tracker import update_tracks
 from event_generator import save_zone_event
 from store_config import load_store_config, get_zone_polygon, point_inside_polygon
 
-VIDEO_PATH = r"videos/CAM 1.mp4"
-STORE_ID = "STORE_BLR_001"
+VIDEO_PATH = r"Store_video/ZONE_CAM.mp4"
+STORE_ID = "STORE_BLR_002"
 CAMERA_ID = "ZONE_CAM"
 ZONE_ID = "ZONE_1"
 
@@ -16,21 +16,26 @@ config = load_store_config(STORE_ID)
 ZONE_POLYGON = get_zone_polygon(config)
 
 track_state = {}
-
 cap = cv2.VideoCapture(VIDEO_PATH)
 
 while True:
-
     ret, frame = cap.read()
-
     if not ret:
         break
 
     detections = detect_people(frame)
     tracks = update_tracks(detections)
 
-    for box, track_id in zip(tracks.xyxy, tracks.tracker_id):
+    if tracks.tracker_id is None:
+        if ZONE_POLYGON:
+            contour = np.array(ZONE_POLYGON, dtype=int).reshape((-1, 1, 2))
+            cv2.polylines(frame, [contour], True, (255, 0, 0), 3)
+        cv2.imshow("STORE2 ZONE CAM", frame)
+        if cv2.waitKey(1) == 27:
+            break
+        continue
 
+    for box, track_id in zip(tracks.xyxy, tracks.tracker_id):
         x1, y1, x2, y2 = map(int, box)
         center_x = (x1 + x2) // 2
         center_y = (y1 + y2) // 2
@@ -38,11 +43,7 @@ while True:
 
         state = track_state.setdefault(
             track_id,
-            {
-                "inside": False,
-                "entered_at": None,
-                "dwell_saved": False
-            }
+            {"inside": False, "entered_at": None, "dwell_saved": False}
         )
 
         if inside_zone and not state["inside"]:
@@ -56,7 +57,7 @@ while True:
                 event_type="ZONE_ENTER",
                 zone_id=ZONE_ID
             )
-            print(f"ZONE_ENTER SAVED -> VIS_{track_id}")
+            print(f"STORE2 ZONE_ENTER SAVED -> VIS_{track_id}")
 
         if inside_zone and state["entered_at"] is not None:
             dwell_ms = int((time.time() - state["entered_at"]) * 1000)
@@ -70,13 +71,12 @@ while True:
                     dwell_ms=dwell_ms
                 )
                 state["dwell_saved"] = True
-                print(f"ZONE_DWELL SAVED -> VIS_{track_id}")
+                print(f"STORE2 ZONE_DWELL SAVED -> VIS_{track_id}")
 
         if not inside_zone and state["inside"]:
             dwell_ms = 0
             if state["entered_at"] is not None:
                 dwell_ms = int((time.time() - state["entered_at"]) * 1000)
-
             save_zone_event(
                 track_id,
                 store_id=STORE_ID,
@@ -88,7 +88,7 @@ while True:
             state["inside"] = False
             state["entered_at"] = None
             state["dwell_saved"] = False
-            print(f"ZONE_EXIT SAVED -> VIS_{track_id}")
+            print(f"STORE2 ZONE_EXIT SAVED -> VIS_{track_id}")
 
         cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
         cv2.putText(frame, f"ID {track_id}", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
@@ -97,7 +97,7 @@ while True:
         contour = np.array(ZONE_POLYGON, dtype=int).reshape((-1, 1, 2))
         cv2.polylines(frame, [contour], True, (255, 0, 0), 3)
 
-    cv2.imshow("CAM1 DWELL", frame)
+    cv2.imshow("STORE2 ZONE CAM", frame)
 
     if cv2.waitKey(1) == 27:
         break

@@ -7,8 +7,8 @@ from tracker import update_tracks
 from event_generator import save_queue_event
 from store_config import load_store_config, get_queue_polygon, point_inside_polygon
 
-VIDEO_PATH = r"videos/CAM 5.mp4"
-STORE_ID = "STORE_BLR_001"
+VIDEO_PATH = r"Store_video/BILLING_CAM.mp4"
+STORE_ID = "STORE_BLR_002"
 CAMERA_ID = "BILLING_CAM"
 
 config = load_store_config(STORE_ID)
@@ -18,9 +18,7 @@ track_state = {}
 cap = cv2.VideoCapture(VIDEO_PATH)
 
 while True:
-
     ret, frame = cap.read()
-
     if not ret:
         break
 
@@ -31,8 +29,7 @@ while True:
         if QUEUE_POLYGON:
             contour = np.array(QUEUE_POLYGON, dtype=int).reshape((-1, 1, 2))
             cv2.polylines(frame, [contour], True, (255, 0, 0), 3)
-
-        cv2.imshow("CAM5 Queue", frame)
+        cv2.imshow("STORE2 BILLING CAM", frame)
         if cv2.waitKey(1) == 27:
             break
         continue
@@ -46,10 +43,7 @@ while True:
 
         state = track_state.setdefault(
             track_id,
-            {
-                "inside": False,
-                "joined_at": None
-            }
+            {"inside": False, "joined_at": None}
         )
 
         if inside_queue and not state["inside"]:
@@ -61,7 +55,7 @@ while True:
                 camera_id=CAMERA_ID,
                 event_type="BILLING_QUEUE_JOIN"
             )
-            print(f"QUEUE JOIN SAVED -> VIS_{track_id}")
+            print(f"STORE2 QUEUE JOIN SAVED -> VIS_{track_id}")
 
         if not inside_queue and state["inside"]:
             queue_time = 0
@@ -81,8 +75,8 @@ while True:
                 event_type=event_type,
                 dwell_ms=queue_time
             )
+            print(f"STORE2 {event_type} SAVED -> VIS_{track_id} ({queue_time}ms)")
 
-            print(f"{event_type} SAVED -> VIS_{track_id} ({queue_time}ms)")
             state["inside"] = False
             state["joined_at"] = None
 
@@ -94,7 +88,7 @@ while True:
         cv2.polylines(frame, [contour], True, (255, 0, 0), 3)
 
     cv2.putText(frame, "QUEUE ZONE", (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
-    cv2.imshow("CAM5 Queue", frame)
+    cv2.imshow("STORE2 BILLING CAM", frame)
 
     if cv2.waitKey(1) == 27:
         break

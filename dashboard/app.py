@@ -8,23 +8,46 @@ st.set_page_config(
     layout="wide"
 )
 
-API_URL = "https://shopintelligence.onrender.com"
-STORE_ID = "STORE_BLR_002"
+API_URL = "http://localhost:8000"
 
+# Supported stores
+SUPPORTED_STORES = [
+    "STORE_BLR_001",
+    "STORE_BLR_002"
+]
+
+st.title("🏪 Store Intelligence Platform")
+st.caption(
+    "AI-Powered Retail Analytics Dashboard"
+)
+
+# Store selector
+col1, col2 = st.columns([1, 4])
+with col1:
+    selected_store = st.selectbox(
+        "Select Store:",
+        SUPPORTED_STORES,
+        index=1,
+        key="store_selector"
+    )
+
+st.divider()
+
+# Fetch data for selected store
 try:
 
     metrics = requests.get(
-        f"{API_URL}/stores/{STORE_ID}/metrics",
+        f"{API_URL}/stores/{selected_store}/metrics",
         timeout=15
     ).json()
 
     anomalies = requests.get(
-        f"{API_URL}/stores/{STORE_ID}/anomalies",
+        f"{API_URL}/stores/{selected_store}/anomalies",
         timeout=15
     ).json()
 
     funnel = requests.get(
-        f"{API_URL}/stores/{STORE_ID}/funnel",
+        f"{API_URL}/stores/{selected_store}/funnel",
         timeout=15
     ).json()
 
@@ -35,11 +58,6 @@ except Exception as e:
     )
 
     st.stop()
-
-st.title("🏪 Store Intelligence Platform")
-st.caption(
-    "AI-Powered Retail Analytics Dashboard"
-)
 
 st.divider()
 
@@ -67,6 +85,34 @@ with col4:
     st.metric(
         "⚠️ Abandonment %",
         f"{metrics['abandonment_rate']}%"
+    )
+
+st.divider()
+
+col5, col6, col7, col8 = st.columns(4)
+
+with col5:
+    st.metric(
+        "🏆 Most Visited Zone",
+        metrics.get("most_visited_zone", "N/A")
+    )
+
+with col6:
+    st.metric(
+        "⏳ Avg Queue Time",
+        f"{metrics['avg_queue_time']}s"
+    )
+
+with col7:
+    st.metric(
+        "✅ Queue Completed",
+        metrics.get("queue_completed_count", 0)
+    )
+
+with col8:
+    st.metric(
+        "❌ Queue Abandoned",
+        metrics.get("queue_abandoned_count", 0)
     )
 
 st.markdown(

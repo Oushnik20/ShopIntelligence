@@ -12,7 +12,7 @@ sys.path.append(
 from app.database import SessionLocal
 from app.models import Transaction
 
-CSV_FILE = "data/pos_transactions.csv"
+CSV_FILE = "data/pos_transactions_new.csv"
 
 db = SessionLocal()
 
@@ -22,7 +22,7 @@ inserted = 0
 
 for idx, row in df.iterrows():
 
-    txn_id = f"TXN_{idx}"
+    txn_id = f"TXN_{row['order_id']}"
 
     exists = db.get(
         Transaction,
@@ -32,15 +32,27 @@ for idx, row in df.iterrows():
     if exists:
         continue
 
+    # Combine order_date and order_time for timestamp
+    timestamp = f"{row['order_date']} {row['order_time']}"
+
+    # Map store_id: ST1008 -> STORE_BLR_002
+    store_id_map = {
+        'ST1008': 'STORE_BLR_002',
+        'ST1009': 'STORE_BLR_001'
+    }
+    
+    mapped_store = store_id_map.get(
+        row['store_id'],
+        'STORE_BLR_002'
+    )
+
     txn = Transaction(
         transaction_id=txn_id,
-        store_id="STORE_BLR_002",
+        store_id=mapped_store,
         visitor_id=f"VIS_{idx % 50}",
-        timestamp=str(
-            row.iloc[0]
-        ),
+        timestamp=timestamp,
         amount=float(
-            row.iloc[-1]
+            row['total_amount']
         )
     )
 
