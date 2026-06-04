@@ -38,17 +38,17 @@ try:
 
     metrics = requests.get(
         f"{API_URL}/stores/{selected_store}/metrics",
-        timeout=15
+        timeout=60
     ).json()
 
     anomalies = requests.get(
         f"{API_URL}/stores/{selected_store}/anomalies",
-        timeout=15
+        timeout=60
     ).json()
 
     funnel = requests.get(
         f"{API_URL}/stores/{selected_store}/funnel",
-        timeout=15
+        timeout=60
     ).json()
 
 except Exception as e:
